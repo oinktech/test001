@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>網站性能評分系統</title>
     <style>
+        /* 样式同上文 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f8ff;
@@ -153,14 +154,51 @@
             color: #007acc;
             font-size: 16px;
         }
+        .config-input {
+            display: none;
+            margin-bottom: 10px;
+        }
+        .config-input input {
+            width: calc(100% - 24px);
+            padding: 14px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        .config-input button {
+            background-color: #007acc;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+        }
+        .config-input button:hover {
+            background-color: #005fa3;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="mainContent">
         <h1>網站性能評分系統</h1>
-        <p>輸入網站 URL 以獲取各項評分：</p>
-        <input type="text" id="urlInput" placeholder="輸入網站 URL" />
-        <button onclick="fetchScores()">獲取評分</button>
+        <div id="configSection" class="config-input">
+            <p>請輸入 API 配置信息：</p>
+            <input type="text" id="googleApiKey" placeholder="Google API Key" />
+            <input type="text" id="pingdomApiKey" placeholder="Pingdom API Key" />
+            <input type="text" id="gtmetrixApiKey" placeholder="GTmetrix API Key" />
+            <input type="text" id="webpagetestApiKey" placeholder="WebPageTest API Key" />
+            <input type="text" id="lighthouseApiKey" placeholder="Lighthouse API Key" />
+            <input type="text" id="uptrendsApiKey" placeholder="Uptrends API Key" />
+            <input type="text" id="site24x7ApiKey" placeholder="Site24x7 API Key" />
+            <button onclick="saveConfig()">儲存設定</button>
+        </div>
+        <div id="mainForm">
+            <p>輸入網站 URL 以獲取各項評分：</p>
+            <input type="text" id="urlInput" placeholder="輸入網站 URL" />
+            <button onclick="fetchScores()">獲取評分</button>
+        </div>
 
         <div id="loader" class="loader"></div>
 
@@ -208,11 +246,11 @@
                     <div class="progress-tooltip" id="site24x7PerformanceTooltip">0%</div>
                 </div>
             </div>
+
+            <div id="errorMessage" class="error-message"></div>
         </div>
 
-        <p id="errorMessage" class="error-message"></p>
-
-        <div class="suggestions" id="suggestions" style="display: none;">
+        <div id="suggestions" class="suggestions" style="display: none;">
             <div class="suggestion-item">
                 <p class="suggestion-title">效能建議:</p>
                 <p id="performanceSuggestion">無建議</p>
@@ -233,6 +271,92 @@
     </div>
 
     <script>
+        const dbName = 'apiConfigDB';
+        const dbVersion = 1;
+        const storeName = 'config';
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, dbVersion);
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    db.createObjectStore(storeName, { keyPath: 'id' });
+                };
+
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+
+                request.onerror = (event) => {
+                    reject('IndexedDB 錯誤: ' + event.target.errorCode);
+                };
+            });
+        }
+
+        function getConfig() {
+            return openDB().then((db) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get('apiConfig');
+
+                    request.onsuccess = (event) => {
+                        resolve(event.target.result);
+                    };
+
+                    request.onerror = (event) => {
+                        reject('IndexedDB 錯誤: ' + event.target.errorCode);
+                    };
+                });
+            });
+        }
+
+        function saveConfig(config) {
+            return openDB().then((db) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put({ id: 'apiConfig', ...config });
+
+                    request.onsuccess = () => {
+                        resolve();
+                    };
+
+                    request.onerror = (event) => {
+                        reject('IndexedDB 錯誤: ' + event.target.errorCode);
+                    };
+                });
+            });
+        }
+
+        function displayConfigInputs() {
+            document.getElementById('configSection').style.display = 'block';
+        }
+
+        function hideConfigInputs() {
+            document.getElementById('configSection').style.display = 'none';
+            document.getElementById('mainForm').style.display = 'block';
+        }
+
+        function saveConfig() {
+            const config = {
+                google: document.getElementById('googleApiKey').value,
+                pingdom: document.getElementById('pingdomApiKey').value,
+                gtmetrix: document.getElementById('gtmetrixApiKey').value,
+                webpagetest: document.getElementById('webpagetestApiKey').value,
+                lighthouse: document.getElementById('lighthouseApiKey').value,
+                uptrends: document.getElementById('uptrendsApiKey').value,
+                site24x7: document.getElementById('site24x7ApiKey').value,
+            };
+            saveConfig(config).then(() => {
+                alert('配置已儲存');
+                hideConfigInputs();
+            }).catch(error => {
+                alert('錯誤: ' + error);
+            });
+        }
+
         async function fetchScores() {
             const urlInput = document.getElementById('urlInput').value.trim();
             const loader = document.getElementById('loader');
@@ -251,9 +375,14 @@
             });
 
             try {
-                // Load configuration from external JSON
-                const configResponse = await fetch('config.json');
-                const config = await configResponse.json();
+                // Get configuration from IndexedDB
+                const config = await getConfig();
+
+                if (!config) {
+                    displayConfigInputs();
+                    loader.style.display = 'none';
+                    return;
+                }
 
                 // Helper function to fetch and display score
                 async function fetchScore(api, endpoint, key, url, elementId, tooltipId) {
@@ -307,6 +436,18 @@
                 loader.style.display = 'none';
             }
         }
+
+        // Initial setup: Check if configuration exists and decide what to display
+        getConfig().then(config => {
+            if (!config) {
+                displayConfigInputs();
+            } else {
+                hideConfigInputs();
+            }
+        }).catch(error => {
+            console.error('Error loading configuration:', error);
+            displayConfigInputs();
+        });
     </script>
 </body>
 </html>
