@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網站性能評分系統</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            width: 900px;
+            max-width: 100%;
+            transition: transform 0.3s ease-in-out;
+            animation: slideIn 1s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        h1 {
+            color: #007acc;
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        input {
+            width: calc(100% - 24px);
+            padding: 14px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            transition: border 0.3s;
+            font-size: 16px;
+        }
+        input:focus {
+            border: 1px solid #007acc;
+            outline: none;
+        }
+        button {
+            background-color: #007acc;
+            color: white;
+            padding: 14px;
+            margin-top: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            transition: background-color 0.3s ease-in-out;
+        }
+        button:hover {
+            background-color: #005fa3;
+        }
+        #result {
+            margin-top: 25px;
+        }
+        .progress-container {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            height: 30px;
+            margin: 15px 0;
+            position: relative;
+        }
+        .progress-bar span {
+            display: block;
+            height: 100%;
+            background-color: #00bfff;
+            width: 0;
+            transition: width 0.5s ease;
+        }
+        .progress-tooltip {
+            position: absolute;
+            top: -35px;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+        .progress-bar:hover .progress-tooltip {
+            display: block;
+        }
+        .score-label {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .error-message {
+            color: red;
+            font-size: 18px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #00bfff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .suggestions {
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+            text-align: left;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .suggestion-item {
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+        .suggestion-title {
+            font-weight: bold;
+            color: #007acc;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>網站性能評分系統</h1>
+        <p>輸入網站 URL 以獲取各項評分：</p>
+        <input type="text" id="urlInput" placeholder="輸入網站 URL" />
+        <button onclick="fetchScores()">獲取評分</button>
+
+        <div id="loader" class="loader"></div>
+
+        <div id="result">
+            <div class="progress-container">
+                <p class="score-label">Google PageSpeed 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="performanceScore"></span>
+                    <div class="progress-tooltip" id="performanceTooltip">0%</div>
+                </div>
+
+                <p class="score-label">Pingdom 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="pingdomPerformanceScore"></span>
+                    <div class="progress-tooltip" id="pingdomPerformanceTooltip">0%</div>
+                </div>
+
+                <p class="score-label">GTmetrix 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="gtmetrixPerformanceScore"></span>
+                    <div class="progress-tooltip" id="gtmetrixPerformanceTooltip">0%</div>
+                </div>
+
+                <p class="score-label">WebPageTest 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="webpagetestPerformanceScore"></span>
+                    <div class="progress-tooltip" id="webpagetestPerformanceTooltip">0%</div>
+                </div>
+
+                <p class="score-label">Lighthouse 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="lighthousePerformanceScore"></span>
+                    <div class="progress-tooltip" id="lighthousePerformanceTooltip">0%</div>
+                </div>
+
+                <p class="score-label">Uptrends 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="uptrendsPerformanceScore"></span>
+                    <div class="progress-tooltip" id="uptrendsPerformanceTooltip">0%</div>
+                </div>
+
+                <p class="score-label">Site24x7 效能評分:</p>
+                <div class="progress-bar">
+                    <span id="site24x7PerformanceScore"></span>
+                    <div class="progress-tooltip" id="site24x7PerformanceTooltip">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <p id="errorMessage" class="error-message"></p>
+
+        <div class="suggestions" id="suggestions" style="display: none;">
+            <div class="suggestion-item">
+                <p class="suggestion-title">效能建議:</p>
+                <p id="performanceSuggestion">無建議</p>
+            </div>
+            <div class="suggestion-item">
+                <p class="suggestion-title">可及性建議:</p>
+                <p id="accessibilitySuggestion">無建議</p>
+            </div>
+            <div class="suggestion-item">
+                <p class="suggestion-title">最佳實踐建議:</p>
+                <p id="bestPracticesSuggestion">無建議</p>
+            </div>
+            <div class="suggestion-item">
+                <p class="suggestion-title">SEO 建議:</p>
+                <p id="seoSuggestion">無建議</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchScores() {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            const loader = document.getElementById('loader');
+            const errorMessage = document.getElementById('errorMessage');
+            const suggestions = document.getElementById('suggestions');
+
+            loader.style.display = 'block';
+            errorMessage.innerText = '';
+            suggestions.style.display = 'none';
+
+            // Reset progress bars
+            const scoreElements = ['performanceScore', 'pingdomPerformanceScore', 'gtmetrixPerformanceScore', 'webpagetestPerformanceScore', 'lighthousePerformanceScore', 'uptrendsPerformanceScore', 'site24x7PerformanceScore'];
+            scoreElements.forEach(id => {
+                document.getElementById(id).style.width = '0';
+                document.getElementById(id + 'Tooltip').textContent = '0%';
+            });
+
+            try {
+                // Load configuration from external JSON
+                const configResponse = await fetch('config.json');
+                const config = await configResponse.json();
+
+                // Helper function to fetch and display score
+                async function fetchScore(api, endpoint, key, url, elementId, tooltipId) {
+                    const response = await fetch(`${endpoint}?url=${encodeURIComponent(url)}&key=${key}`);
+                    const data = await response.json();
+                    const performance = data.performance || 0; // Adjust based on actual API
+                    document.getElementById(elementId).style.width = performance + '%';
+                    document.getElementById(tooltipId).textContent = performance + '%';
+                }
+
+                // Fetch Google PageSpeed Insights score
+                await fetchScore('google', config.google.endpoint, config.google.apiKey, urlInput, 'performanceScore', 'performanceTooltip');
+
+                // Fetch Pingdom score
+                await fetchScore('pingdom', config.pingdom.endpoint, config.pingdom.apiKey, urlInput, 'pingdomPerformanceScore', 'pingdomPerformanceTooltip');
+
+                // Fetch GTmetrix score
+                await fetchScore('gtmetrix', config.gtmetrix.endpoint, config.gtmetrix.apiKey, urlInput, 'gtmetrixPerformanceScore', 'gtmetrixPerformanceTooltip');
+
+                // Fetch WebPageTest score
+                await fetchScore('webpagetest', config.webpagetest.endpoint, config.webpagetest.apiKey, urlInput, 'webpagetestPerformanceScore', 'webpagetestPerformanceTooltip');
+
+                // Fetch Lighthouse score (already fetched via Google PageSpeed Insights)
+                const lighthousePerformance = document.getElementById('performanceScore').style.width;
+                document.getElementById('lighthousePerformanceScore').style.width = lighthousePerformance;
+                document.getElementById('lighthousePerformanceTooltip').textContent = lighthousePerformance;
+
+                // Fetch Uptrends score
+                await fetchScore('uptrends', config.uptrends.endpoint, config.uptrends.apiKey, urlInput, 'uptrendsPerformanceScore', 'uptrendsPerformanceTooltip');
+
+                // Fetch Site24x7 score
+                await fetchScore('site24x7', config.site24x7.endpoint, config.site24x7.apiKey, urlInput, 'site24x7PerformanceScore', 'site24x7PerformanceTooltip');
+
+                // Display suggestions from Google PageSpeed Insights
+                document.getElementById('performanceSuggestion').innerText = googleData.lighthouseResult.audits['first-contentful-paint']?.details?.summary || '無建議';
+                document.getElementById('accessibilitySuggestion').innerText = googleData.lighthouseResult.audits['aria-required-children']?.details?.summary || '無建議';
+                document.getElementById('bestPracticesSuggestion').innerText = googleData.lighthouseResult.audits['uses-rel-preconnect']?.details?.summary || '無建議';
+                document.getElementById('seoSuggestion').innerText = googleData.lighthouseResult.audits['meta-description']?.details?.summary || '無建議';
+                suggestions.style.display = 'block';
+
+            } catch (error) {
+                if (error.message.includes('HTTP Error: 403')) {
+                    errorMessage.innerText = 'API 密鑰無效或超過配額限制，請檢查您的 API 密鑰設定。';
+                } else if (error.message.includes('HTTP Error: 404')) {
+                    errorMessage.innerText = '無法找到該頁面，請檢查 URL 是否正確。';
+                } else {
+                    errorMessage.innerText = `錯誤: ${error.message}`;
+                }
+                console.error('Error fetching scores:', error);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
