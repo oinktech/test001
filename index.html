@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 配置</title>
+    <title>設定評分工具 API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,8 +16,8 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            align-items: center;
             justify-content: center;
+            align-items: center;
         }
         .container {
             background-color: white;
@@ -26,20 +27,37 @@
             width: 100%;
             max-width: 600px;
             box-sizing: border-box;
-            text-align: center;
+            margin-top: 60px;
+            animation: slideIn 1s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateY(-30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         h1 {
             color: #007acc;
-            font-size: 36px;
+            font-size: 24px;
             margin: 0 0 20px;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-size: 18px;
+            color: #333;
         }
         input {
             width: calc(100% - 24px);
             padding: 14px;
-            margin-top: 10px;
+            margin-top: 5px;
             border-radius: 8px;
             border: 1px solid #ccc;
-            transition: border 0.3s;
             font-size: 16px;
         }
         input:focus {
@@ -61,76 +79,131 @@
         button:hover {
             background-color: #005fa3;
         }
-        .error-message {
+        #message {
+            margin-top: 20px;
             color: red;
-            font-size: 18px;
-            margin-top: 15px;
-            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="container" id="configContainer">
-        <h1>API 配置</h1>
-        <div id="configSection">
-            <p>請輸入 API 配置信息：</p>
-            <input type="text" id="googleApiKey" placeholder="Google API Key" />
-            <input type="text" id="pingdomApiKey" placeholder="Pingdom API Key" />
-            <input type="text" id="gtmetrixApiKey" placeholder="GTmetrix API Key" />
-            <input type="text" id="webpagetestApiKey" placeholder="WebPageTest API Key" />
-            <input type="text" id="lighthouseApiKey" placeholder="Lighthouse API Key" />
-            <input type="text" id="uptrendsApiKey" placeholder="Uptrends API Key" />
-            <input type="text" id="site24x7ApiKey" placeholder="Site24x7 API Key" />
-            <button onclick="saveConfig()">儲存設定</button>
-        </div>
-        <div id="errorMessage" class="error-message"></div>
+    <div class="container">
+        <h1>設定評分工具 API</h1>
+        <label for="performanceApi">Google PageSpeed API:</label>
+        <input type="text" id="performanceApi" placeholder="輸入 Google PageSpeed API" />
+
+        <label for="pingdomApi">Pingdom API:</label>
+        <input type="text" id="pingdomApi" placeholder="輸入 Pingdom API" />
+
+        <label for="gtmetrixApi">GTmetrix API:</label>
+        <input type="text" id="gtmetrixApi" placeholder="輸入 GTmetrix API" />
+
+        <label for="webpagetestApi">WebPageTest API:</label>
+        <input type="text" id="webpagetestApi" placeholder="輸入 WebPageTest API" />
+
+        <label for="lighthouseApi">Lighthouse API:</label>
+        <input type="text" id="lighthouseApi" placeholder="輸入 Lighthouse API" />
+
+        <label for="uptrendsApi">Uptrends API:</label>
+        <input type="text" id="uptrendsApi" placeholder="輸入 Uptrends API" />
+
+        <label for="site24x7Api">Site24x7 API:</label>
+        <input type="text" id="site24x7Api" placeholder="輸入 Site24x7 API" />
+
+        <button onclick="saveAndRedirect()">儲存設定並跳轉</button>
+        <div id="message"></div>
     </div>
 
     <script>
-        async function checkConfig() {
-            const db = await openDB();
-            const config = await db.get('config', 'apiConfig');
-            if (config) {
-                // 如果有配置，跳轉到 home.html
-                window.location.href = 'home.html';
-            } else {
-                // 如果沒有配置，顯示配置輸入表單
-                document.getElementById('configContainer').style.display = 'block';
-            }
+        // 確保 IndexedDB API 可用
+        if (!('indexedDB' in window)) {
+            alert("您的瀏覽器不支持 IndexedDB。");
         }
 
-        async function saveConfig() {
-            const config = {
-                googleApiKey: document.getElementById('googleApiKey').value,
-                pingdomApiKey: document.getElementById('pingdomApiKey').value,
-                gtmetrixApiKey: document.getElementById('gtmetrixApiKey').value,
-                webpagetestApiKey: document.getElementById('webpagetestApiKey').value,
-                lighthouseApiKey: document.getElementById('lighthouseApiKey').value,
-                uptrendsApiKey: document.getElementById('uptrendsApiKey').value,
-                site24x7ApiKey: document.getElementById('site24x7ApiKey').value
+        const saveFirebaseConfig = (config) => {
+            const request = indexedDB.open("PerformanceDB", 1);
+
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains("apiConfig")) {
+                    db.createObjectStore("apiConfig", { keyPath: "id" });
+                }
             };
-            const db = await openDB();
-            const tx = db.transaction('config', 'readwrite');
-            tx.store.put(config, 'apiConfig');
-            await tx.done;
-            alert('設定已儲存');
-            window.location.href = 'home.html'; // 保存後跳轉到 home.html
-        }
 
-        function openDB() {
+            request.onsuccess = (event) => {
+                const db = event.target.result;
+                const transaction = db.transaction("apiConfig", "readwrite");
+                const store = transaction.objectStore("apiConfig");
+                store.put({ id: "config", config });
+            };
+
+            request.onerror = (event) => {
+                console.error("IndexedDB 錯誤：", event.target.errorCode);
+            };
+        };
+
+        const getFirebaseConfig = () => {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open('performanceDB', 1);
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    db.createObjectStore('config', { keyPath: 'id' });
-                };
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
+                const request = indexedDB.open("PerformanceDB", 1);
 
-        // 页面加载时检查配置
-        window.onload = checkConfig;
+                request.onsuccess = (event) => {
+                    const db = event.target.result;
+                    const transaction = db.transaction("apiConfig", "readonly");
+                    const store = transaction.objectStore("apiConfig");
+                    const getRequest = store.get("config");
+
+                    getRequest.onsuccess = () => {
+                        resolve(getRequest.result.config);
+                    };
+
+                    getRequest.onerror = () => {
+                        reject(getRequest.error);
+                    };
+                };
+
+                request.onerror = (event) => {
+                    reject(event.target.errorCode);
+                };
+            });
+        };
+
+        const loadCurrentConfig = async () => {
+            try {
+                const config = await getFirebaseConfig();
+                if (config) {
+                    document.getElementById("performanceApi").value = config.performanceApi || '';
+                    document.getElementById("pingdomApi").value = config.pingdomApi || '';
+                    document.getElementById("gtmetrixApi").value = config.gtmetrixApi || '';
+                    document.getElementById("webpagetestApi").value = config.webpagetestApi || '';
+                    document.getElementById("lighthouseApi").value = config.lighthouseApi || '';
+                    document.getElementById("uptrendsApi").value = config.uptrendsApi || '';
+                    document.getElementById("site24x7Api").value = config.site24x7Api || '';
+                }
+            } catch (error) {
+                console.error("讀取設定錯誤：", error.message);
+            }
+        };
+
+        const saveAndRedirect = () => {
+            const config = {
+                performanceApi: document.getElementById("performanceApi").value,
+                pingdomApi: document.getElementById("pingdomApi").value,
+                gtmetrixApi: document.getElementById("gtmetrixApi").value,
+                webpagetestApi: document.getElementById("webpagetestApi").value,
+                lighthouseApi: document.getElementById("lighthouseApi").value,
+                uptrendsApi: document.getElementById("uptrendsApi").value,
+                site24x7Api: document.getElementById("site24x7Api").value
+            };
+
+            saveFirebaseConfig(config);
+
+            // 跳轉到其他頁面
+            window.location.href = "home.html";
+        };
+
+        // 页面加载时加载当前设置
+        loadCurrentConfig();
     </script>
 </body>
 </html>
