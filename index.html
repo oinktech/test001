@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>網站性能評分系統</title>
+    <title>API 配置</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,56 +15,23 @@
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-        }
-        .navbar {
-            width: 100%;
-            background-color: #007acc;
-            color: white;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            text-align: center;
+            align-items: center;
+            justify-content: center;
         }
         .container {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        .content {
             background-color: white;
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
             width: 100%;
-            max-width: 900px;
+            max-width: 600px;
             box-sizing: border-box;
-            margin-top: 60px;
-            transition: transform 0.3s ease-in-out;
-            animation: slideIn 1s ease-out forwards;
-        }
-        @keyframes slideIn {
-            from {
-                transform: translateY(-30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
+            text-align: center;
         }
         h1 {
             color: #007acc;
             font-size: 36px;
             margin: 0 0 20px;
-        }
-        p {
-            font-size: 18px;
-            margin-bottom: 15px;
         }
         input {
             width: calc(100% - 24px);
@@ -94,221 +61,44 @@
         button:hover {
             background-color: #005fa3;
         }
-        #result {
-            margin-top: 25px;
-        }
-        .progress-container {
-            margin-top: 20px;
-            text-align: left;
-        }
-        .progress-bar {
-            background-color: #e0e0e0;
-            border-radius: 6px;
-            overflow: hidden;
-            height: 30px;
-            margin: 15px 0;
-            position: relative;
-        }
-        .progress-bar span {
-            display: block;
-            height: 100%;
-            background-color: #00bfff;
-            width: 0;
-            transition: width 0.5s ease;
-        }
-        .progress-tooltip {
-            position: absolute;
-            top: -35px;
-            left: 0;
-            background-color: #333;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 14px;
-            display: none;
-        }
-        .progress-bar:hover .progress-tooltip {
-            display: block;
-        }
-        .score-label {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
         .error-message {
             color: red;
             font-size: 18px;
             margin-top: 15px;
             font-weight: bold;
         }
-        .loader {
-            border: 8px solid #f3f3f3;
-            border-top: 8px solid #00bfff;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            display: none;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .suggestions {
-            background-color: #f9f9f9;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 25px;
-            text-align: left;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        .suggestion-item {
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .suggestion-item:last-child {
-            border-bottom: none;
-        }
-        .suggestion-title {
-            font-weight: bold;
-            color: #007acc;
-            font-size: 16px;
-        }
-        .config-input {
-            display: none;
-            margin-bottom: 10px;
-        }
-        .config-input input {
-            width: calc(100% - 24px);
-            padding: 14px;
-            margin: 5px 0;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-        }
-        .config-input button {
-            background-color: #007acc;
-            color: white;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 18px;
-        }
-        .config-input button:hover {
-            background-color: #005fa3;
-        }
-        .download-btn {
-            margin-top: 20px;
-            background-color: #28a745;
-            color: white;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-        }
-        .download-btn:hover {
-            background-color: #218838;
-        }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <h1>網站性能評分系統</h1>
-    </div>
-    <div class="container">
-        <div class="content" id="mainContent">
-            <div id="configSection" class="config-input">
-                <p>請輸入 API 配置信息：</p>
-                <input type="text" id="googleApiKey" placeholder="Google API Key" />
-                <input type="text" id="pingdomApiKey" placeholder="Pingdom API Key" />
-                <input type="text" id="gtmetrixApiKey" placeholder="GTmetrix API Key" />
-                <input type="text" id="webpagetestApiKey" placeholder="WebPageTest API Key" />
-                <input type="text" id="lighthouseApiKey" placeholder="Lighthouse API Key" />
-                <input type="text" id="uptrendsApiKey" placeholder="Uptrends API Key" />
-                <input type="text" id="site24x7ApiKey" placeholder="Site24x7 API Key" />
-                <button onclick="saveConfig()">儲存設定</button>
-            </div>
-            <div id="mainForm">
-                <p>輸入網站 URL 以獲取各項評分：</p>
-                <input type="text" id="urlInput" placeholder="輸入網站 URL" />
-                <button onclick="fetchScores()">獲取評分</button>
-                <button class="download-btn" onclick="downloadConfig()">下載配置</button>
-            </div>
-
-            <div id="loader" class="loader"></div>
-
-            <div id="result">
-                <div class="progress-container">
-                    <p class="score-label">Google PageSpeed 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="performanceScore"></span>
-                        <div class="progress-tooltip" id="performanceTooltip">0%</div>
-                    </div>
-
-                    <p class="score-label">Pingdom 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="pingdomPerformanceScore"></span>
-                        <div class="progress-tooltip" id="pingdomPerformanceTooltip">0%</div>
-                    </div>
-
-                    <p class="score-label">GTmetrix 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="gtmetrixPerformanceScore"></span>
-                        <div class="progress-tooltip" id="gtmetrixPerformanceTooltip">0%</div>
-                    </div>
-
-                    <p class="score-label">WebPageTest 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="webpagetestPerformanceScore"></span>
-                        <div class="progress-tooltip" id="webpagetestPerformanceTooltip">0%</div>
-                    </div>
-
-                    <p class="score-label">Lighthouse 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="lighthousePerformanceScore"></span>
-                        <div class="progress-tooltip" id="lighthousePerformanceTooltip">0%</div>
-                    </div>
-
-                    <p class="score-label">Uptrends 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="uptrendsPerformanceScore"></span>
-                        <div class="progress-tooltip" id="uptrendsPerformanceTooltip">0%</div>
-                    </div>
-
-                    <p class="score-label">Site24x7 效能評分:</p>
-                    <div class="progress-bar">
-                        <span id="site24x7PerformanceScore"></span>
-                        <div class="progress-tooltip" id="site24x7PerformanceTooltip">0%</div>
-                    </div>
-                </div>
-
-                <div id="errorMessage" class="error-message"></div>
-            </div>
-
-            <div id="suggestions" class="suggestions" style="display: none;">
-                <div class="suggestion-item">
-                    <p class="suggestion-title">效能建議:</p>
-                    <p id="performanceSuggestion">無建議</p>
-                </div>
-                <div class="suggestion-item">
-                    <p class="suggestion-title">可及性建議:</p>
-                    <p id="accessibilitySuggestion">無建議</p>
-                </div>
-                <div class="suggestion-item">
-                    <p class="suggestion-title">最佳實踐建議:</p>
-                    <p id="bestPracticesSuggestion">無建議</p>
-                </div>
-                <div class="suggestion-item">
-                    <p class="suggestion-title">SEO 建議:</p>
-                    <p id="seoSuggestion">無建議</p>
-                </div>
-            </div>
+    <div class="container" id="configContainer">
+        <h1>API 配置</h1>
+        <div id="configSection">
+            <p>請輸入 API 配置信息：</p>
+            <input type="text" id="googleApiKey" placeholder="Google API Key" />
+            <input type="text" id="pingdomApiKey" placeholder="Pingdom API Key" />
+            <input type="text" id="gtmetrixApiKey" placeholder="GTmetrix API Key" />
+            <input type="text" id="webpagetestApiKey" placeholder="WebPageTest API Key" />
+            <input type="text" id="lighthouseApiKey" placeholder="Lighthouse API Key" />
+            <input type="text" id="uptrendsApiKey" placeholder="Uptrends API Key" />
+            <input type="text" id="site24x7ApiKey" placeholder="Site24x7 API Key" />
+            <button onclick="saveConfig()">儲存設定</button>
         </div>
+        <div id="errorMessage" class="error-message"></div>
     </div>
 
     <script>
+        async function checkConfig() {
+            const db = await openDB();
+            const config = await db.get('config', 'apiConfig');
+            if (config) {
+                // 如果有配置，跳轉到 home.html
+                window.location.href = 'home.html';
+            } else {
+                // 如果沒有配置，顯示配置輸入表單
+                document.getElementById('configContainer').style.display = 'block';
+            }
+        }
+
         async function saveConfig() {
             const config = {
                 googleApiKey: document.getElementById('googleApiKey').value,
@@ -324,25 +114,7 @@
             tx.store.put(config, 'apiConfig');
             await tx.done;
             alert('設定已儲存');
-        }
-
-        async function loadConfig() {
-            const db = await openDB();
-            const config = await db.get('config', 'apiConfig');
-            if (config) {
-                document.getElementById('googleApiKey').value = config.googleApiKey || '';
-                document.getElementById('pingdomApiKey').value = config.pingdomApiKey || '';
-                document.getElementById('gtmetrixApiKey').value = config.gtmetrixApiKey || '';
-                document.getElementById('webpagetestApiKey').value = config.webpagetestApiKey || '';
-                document.getElementById('lighthouseApiKey').value = config.lighthouseApiKey || '';
-                document.getElementById('uptrendsApiKey').value = config.uptrendsApiKey || '';
-                document.getElementById('site24x7ApiKey').value = config.site24x7ApiKey || '';
-                document.getElementById('configSection').style.display = 'none';
-                document.getElementById('mainForm').style.display = 'block';
-            } else {
-                document.getElementById('configSection').style.display = 'block';
-                document.getElementById('mainForm').style.display = 'none';
-            }
+            window.location.href = 'home.html'; // 保存後跳轉到 home.html
         }
 
         function openDB() {
@@ -357,78 +129,8 @@
             });
         }
 
-        async function fetchScores() {
-            const url = document.getElementById('urlInput').value;
-            if (!url) {
-                alert('請輸入網站 URL');
-                return;
-            }
-            document.getElementById('loader').style.display = 'block';
-            try {
-                const config = await getConfig();
-                // Replace with real API calls and implement your API requests here
-                const performanceScore = await fetchPerformanceScore(url, config);
-                updateProgress('performanceScore', performanceScore);
-
-                // Add similar API calls and update functions for the other services
-                // ...
-
-                document.getElementById('suggestions').style.display = 'block';
-            } catch (error) {
-                document.getElementById('errorMessage').innerText = '獲取評分時出錯：' + error.message;
-            } finally {
-                document.getElementById('loader').style.display = 'none';
-            }
-        }
-
-        function updateProgress(elementId, score) {
-            const element = document.getElementById(elementId);
-            element.style.width = score + '%';
-            element.innerText = score + '%';
-            document.getElementById(elementId + 'Tooltip').innerText = score + '%';
-        }
-
-        function getConfig() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open('performanceDB', 1);
-                request.onsuccess = () => {
-                    const db = request.result;
-                    const tx = db.transaction('config', 'readonly');
-                    tx.objectStore('config').get('apiConfig').onsuccess = (event) => resolve(event.target.result);
-                    tx.objectStore('config').get('apiConfig').onerror = (event) => reject(event.target.error);
-                };
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        function fetchPerformanceScore(url, config) {
-            // Simulate API call
-            return new Promise((resolve) => {
-                setTimeout(() => resolve(Math.floor(Math.random() * 101)), 1000);
-            });
-        }
-
-        function downloadConfig() {
-            const config = {
-                googleApiKey: document.getElementById('googleApiKey').value,
-                pingdomApiKey: document.getElementById('pingdomApiKey').value,
-                gtmetrixApiKey: document.getElementById('gtmetrixApiKey').value,
-                webpagetestApiKey: document.getElementById('webpagetestApiKey').value,
-                lighthouseApiKey: document.getElementById('lighthouseApiKey').value,
-                uptrendsApiKey: document.getElementById('uptrendsApiKey').value,
-                site24x7ApiKey: document.getElementById('site24x7ApiKey').value
-            };
-            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'config.json';
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // Load config on page load
-        window.onload = loadConfig;
+        // 页面加载时检查配置
+        window.onload = checkConfig;
     </script>
 </body>
 </html>
